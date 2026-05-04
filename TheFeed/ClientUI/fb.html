@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeFeed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #18191a;
+            --bg-secondary: #242526;
+            --bg-tertiary: #3a3b3c;
+            --bg-hover: #3a3b3c;
+            --border: #3e4042;
+            --text-primary: #e4e6eb;
+            --text-secondary: #b0b3b8;
+            --text-muted: #8a8d91;
+            --accent: #2374e1;
+            --accent-hover: #1a6dd4;
+            --like-color: #2374e1;
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+        video {
+            width: 100%;
+            height: auto;
+            max-height: 512px;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+        
+
+        body {
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Top Nav ── */
+        .topnav {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 8px;
+        }
+
+        .nav-logo {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--accent);
+            letter-spacing: -1px;
+            flex-shrink: 0;
+            font-style: italic;
+        }
+
+        .nav-search-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+            .nav-search-wrap svg {
+                position: absolute;
+                left: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 16px;
+                height: 16px;
+                fill: var(--text-muted);
+                pointer-events: none;
+            }
+
+        .nav-search {
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 9999px;
+            padding: 8px 16px 8px 36px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            width: 220px;
+        }
+
+            .nav-search::placeholder {
+                color: var(--text-muted);
+            }
+
+        .nav-tabs {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .nav-tab {
+            padding: 8px 32px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background 0.1s;
+            color: var(--text-secondary);
+            position: relative;
+        }
+
+            .nav-tab:hover {
+                background: var(--bg-hover);
+                color: var(--text-primary);
+            }
+
+            .nav-tab.active {
+                color: var(--accent);
+            }
+
+                .nav-tab.active::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -9px;
+                    left: 0;
+                    right: 0;
+                    height: 3px;
+                    background: var(--accent);
+                    border-radius: 3px 3px 0 0;
+                }
+
+            .nav-tab svg {
+                width: 24px;
+                height: 24px;
+                fill: currentColor;
+                display: block;
+            }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .nav-action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            transition: background 0.1s;
+        }
+
+            .nav-action-btn:hover {
+                background: var(--bg-hover);
+            }
+
+            .nav-action-btn svg {
+                width: 20px;
+                height: 20px;
+                fill: currentColor;
+            }
+
+        .nav-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* ── Cover Photo (full width) ── */
+        .cover-wrap {
+            width: 100%;
+            background: var(--bg-secondary);
+        }
+
+        .cover-photo {
+            width: 100%;
+            height: 350px;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+            .cover-photo::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(ellipse at 25% 60%, rgba(83,52,131,0.5) 0%, transparent 55%), radial-gradient(ellipse at 75% 30%, rgba(35,116,225,0.4) 0%, transparent 45%), radial-gradient(ellipse at 50% 90%, rgba(36,36,62,0.8) 0%, transparent 50%);
+            }
+
+            .cover-photo::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.6) 100%);
+            }
+
+        .cover-edit-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            z-index: 1;
+            background: rgba(36,37,38,0.9);
+            border: none;
+            border-radius: var(--radius);
+            padding: 8px 14px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.1s;
+            backdrop-filter: blur(4px);
+        }
+
+            .cover-edit-btn:hover {
+                background: var(--bg-tertiary);
+            }
+
+            .cover-edit-btn svg {
+                width: 16px;
+                height: 16px;
+                fill: currentColor;
+            }
+
+        /* ── Group header bar (below cover) ── */
+        .group-header {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 16px 24px 0;
+        }
+
+        .group-title-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .group-name {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+        }
+
+        .group-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+            .group-meta svg {
+                width: 14px;
+                height: 14px;
+                fill: currentColor;
+            }
+
+        .meta-dot {
+            color: var(--text-muted);
+        }
+
+        .member-stack {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .stack-avatars {
+            display: flex;
+        }
+
+        .stack-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-secondary);
+            margin-left: -7px;
+            flex-shrink: 0;
+        }
+
+            .stack-avatar:first-child {
+                margin-left: 0;
+            }
+
+        .stack-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .group-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            padding-top: 4px;
+        }
+
+        .grp-btn {
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+
+            .grp-btn svg {
+                width: 16px;
+                height: 16px;
+                fill: currentColor;
+            }
+
+            .grp-btn.joined {
+                background: var(--accent);
+                color: #fff;
+            }
+
+                .grp-btn.joined:hover {
+                    background: var(--accent-hover);
+                }
+
+            .grp-btn.ghost {
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
+            }
+
+                .grp-btn.ghost:hover {
+                    background: #4a4b4c;
+                }
+
+        /* ── Group sub-nav tabs ── */
+        .group-subnav {
+            max-width: 1080px;
+            margin: 12px auto 0;
+            padding: 0 24px;
+            display: flex;
+            gap: 2px;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+            .group-subnav::-webkit-scrollbar {
+                display: none;
+            }
+
+        .subnav-tab {
+            padding: 14px 16px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: color 0.1s;
+            flex-shrink: 0;
+        }
+
+            .subnav-tab:hover {
+                color: var(--text-primary);
+            }
+
+            .subnav-tab.active {
+                color: var(--accent);
+                border-bottom-color: var(--accent);
+            }
+
+        /* ── Two-column content ── */
+        .content {
+            max-width: 1080px;
+            margin: 16px auto;
+            padding: 0 24px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        /* ── Left: Feed ── */
+        .feed-col {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Compose */
+        .compose-bar {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 12px 16px;
+        }
+
+        .compose-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .compose-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .compose-input {
+            flex: 1;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 9999px;
+            padding: 10px 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+            .compose-input:hover {
+                background: #4a4b4c;
+            }
+
+        .compose-divider {
+            height: 1px;
+            background: var(--border);
+            margin-bottom: 10px;
+        }
+
+        .compose-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .compose-action {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: background 0.1s;
+        }
+
+            .compose-action:hover {
+                background: var(--bg-hover);
+                color: var(--text-primary);
+            }
+
+            .compose-action svg {
+                width: 20px;
+                height: 20px;
+            }
+
+        /* Post card */
+        .post-card {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            animation: fadeUp 0.2s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+        }
+
+        .post-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: var(--bg-tertiary);
+        }
+
+            .post-avatar img, .post-avatar svg {
+                width: 100%;
+                height: 100%;
+                display: block;
+            }
+
+        .post-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .post-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+            .post-name:hover {
+                text-decoration: underline;
+            }
+
+        .post-sub {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+            .post-sub svg {
+                width: 12px;
+                height: 12px;
+                fill: currentColor;
+            }
+
+        .admin-badge {
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--accent);
+            color: #fff;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-left: 4px;
+        }
+
+        .post-more {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: background 0.1s;
+        }
+
+            .post-more:hover {
+                background: var(--bg-hover);
+            }
+
+            .post-more svg {
+                width: 20px;
+                height: 20px;
+                fill: currentColor;
+            }
+
+        .post-text {
+            padding: 0 16px 12px;
+            font-size: 15px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+
+        .post-image {
+            width: 100%;
+            height: auto; /* add this */
+            object-fit: contain; /* add this */
+            display: block;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+            .post-image:hover {
+                opacity: 0.95;
+            }
+
+        .post-stats {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        .reaction-icons {
+            display: flex;
+            align-items: center;
+        }
+
+        .reaction-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-secondary);
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .reaction-icon:not(:first-child) {
+                margin-left: -6px;
+            }
+
+        .reaction-count {
+            margin-left: 6px;
+            cursor: pointer;
+        }
+
+            .reaction-count:hover {
+                text-decoration: underline;
+            }
+
+        .post-comment-count {
+            cursor: pointer;
+        }
+
+            .post-comment-count:hover {
+                text-decoration: underline;
+            }
+
+        .post-actions {
+            display: flex;
+            border-top: 1px solid var(--border);
+            margin: 0 4px;
+        }
+
+        .post-action {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: background 0.1s, color 0.1s;
+            background: none;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            margin: 4px 0;
+        }
+
+            .post-action:hover {
+                background: var(--bg-hover);
+                color: var(--text-primary);
+            }
+
+            .post-action.liked {
+                color: var(--like-color);
+            }
+
+            .post-action svg {
+                width: 20px;
+                height: 20px;
+                fill: currentColor;
+            }
+
+        /* ── Right: About panel ── */
+        .right-col {
+            width: 300px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: sticky;
+            top: 72px;
+        }
+
+        @media (max-width: 900px) {
+            .right-col {
+                display: none;
+            }
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+
+        .panel-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .panel-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 6px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+            .panel-row svg {
+                width: 20px;
+                height: 20px;
+                fill: var(--text-secondary);
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+
+            .panel-row strong {
+                color: var(--text-primary);
+            }
+
+        .panel-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 8px 0;
+        }
+
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .member-thumb {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: var(--radius);
+            transition: background 0.1s;
+        }
+
+            .member-thumb:hover {
+                background: var(--bg-hover);
+            }
+
+        .member-thumb-av {
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+        }
+
+        .member-thumb-name {
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .panel-btn {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: var(--radius);
+            padding: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.1s;
+        }
+
+            .panel-btn:hover {
+                background: #4a4b4c;
+            }
+
+        .admin-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: background 0.1s;
+        }
+
+            .admin-row:hover {
+                background: var(--bg-hover);
+            }
+
+        .admin-av {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .admin-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .admin-role {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ── Modal ── */
+        .image-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .image-modal.active {
+                display: flex;
+                animation: fadeIn 0.15s ease;
+            }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            cursor: zoom-out;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: min(92vw, 960px);
+            max-height: 90vh;
+            z-index: 1;
+            animation: scaleIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.93);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: var(--radius);
+            display: block;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -14px;
+            right: -14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: background 0.15s, color 0.15s;
+            z-index: 2;
+        }
+
+            .modal-close:hover {
+                background: var(--bg-hover);
+                color: var(--text-primary);
+            }
+
+        .sentinel {
+            height: 1px;
+        }
+
+        @media (max-width: 640px) {
+            .cover-photo {
+                height: 200px;
+            }
+
+            .group-header {
+                padding: 12px 16px 0;
+            }
+
+            .group-name {
+                font-size: 22px;
+            }
+
+            .content {
+                padding: 12px 16px;
+            }
+
+            .group-subnav {
+                padding: 0 16px;
+            }
+
+            .nav-search-wrap {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Nav -->
+    <nav class="topnav">
+        <div class="nav-logo">f</div>
+        <div class="nav-search-wrap">
+            <svg viewBox="0 0 24 24"><path d="M10.25 3.75c-3.59 0-6.5 2.91-6.5 6.5s2.91 6.5 6.5 6.5c1.795 0 3.419-.726 4.596-1.904 1.178-1.177 1.904-2.801 1.904-4.596 0-3.59-2.91-6.5-6.5-6.5zm-8.5 6.5c0-4.694 3.806-8.5 8.5-8.5 4.694 0 8.5 3.806 8.5 8.5 0 1.986-.682 3.815-1.814 5.272l4.521 4.521-1.414 1.414-4.521-4.521C13.815 19.568 11.986 20.25 10.25 20.25c-4.694 0-8.5-3.806-8.5-8.5z" /></svg>
+            <input class="nav-search" type="text" placeholder="Search LeFeed">
+        </div>
+        <div class="nav-tabs">
+            <div class="nav-tab"><svg viewBox="0 0 24 24"><path d="M12 1.696L.622 8.807l1.06 1.696L3 9.679V19.5C3 20.881 4.119 22 5.5 22h13c1.381 0 2.5-1.119 2.5-2.5V9.679l1.318.824 1.06-1.696L12 1.696z" /></svg></div>
+            <div class="nav-tab active"><svg viewBox="0 0 24 24"><path d="M1.998 9.5c0-3.314 2.686-6 6-6h8c3.314 0 6 2.686 6 6v1c0 .55-.45 1-1 1h-2v6.5c0 .828-.672 1.5-1.5 1.5h-11c-.828 0-1.5-.672-1.5-1.5V11.5h-2c-.55 0-1-.45-1-1v-1zm6-4c-2.21 0-4 1.79-4 4v.5h2c.55 0 1 .45 1 1V17h9v-6c0-.55.45-1 1-1h2v-.5c0-2.21-1.79-4-4-4h-7z" /></svg></div>
+            <div class="nav-tab"><svg viewBox="0 0 24 24"><path d="M19.993 9.042C19.48 5.017 16.054 2 11.996 2s-7.49 3.021-7.999 7.051L2.866 18H7.1c.463 2.282 2.481 4 4.9 4s4.437-1.718 4.9-4h4.236l-1.143-8.958z" /></svg></div>
+            <div class="nav-tab"><svg viewBox="0 0 24 24"><path d="M1.998 5.5c0-1.381 1.119-2.5 2.5-2.5h15c1.381 0 2.5 1.119 2.5 2.5v13c0 1.381-1.119 2.5-2.5 2.5h-15c-1.381 0-2.5-1.119-2.5-2.5v-13zm2.5-.5c-.276 0-.5.224-.5.5v2.764l8 3.638 8-3.638V5.5c0-.276-.224-.5-.5-.5h-15zm15.5 5.463l-8 3.636-8-3.636V18.5c0 .276.224.5.5.5h15c.276 0 .5-.224.5-.5v-8.037z" /></svg></div>
+        </div>
+        <div class="nav-actions">
+            <button class="nav-action-btn"><svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm8-16a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm8-16a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z" /></svg></button>
+            <button class="nav-action-btn"><svg viewBox="0 0 24 24"><path d="M19.993 9.042C19.48 5.017 16.054 2 11.996 2s-7.49 3.021-7.999 7.051L2.866 18H7.1c.463 2.282 2.481 4 4.9 4s4.437-1.718 4.9-4h4.236l-1.143-8.958z" /></svg></button>
+            <div class="nav-avatar"></div>
+        </div>
+    </nav>
+
+    <!-- Full-width cover -->
+    <div class="cover-wrap">
+        <div class="cover-photo">
+            <button class="cover-edit-btn">
+                <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
+                Edit cover photo
+            </button>
+        </div>
+
+        <!-- Group identity row -->
+        <div class="group-header">
+            <div class="group-title-row">
+                <div>
+                    <div class="group-name">LeFeed Community</div>
+                    <div class="group-meta">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" /></svg>
+                        Public group
+                        <span class="meta-dot">·</span>
+                        24.6K members
+                        <span class="meta-dot">·</span>
+                        312 posts this week
+                    </div>
+                    <div class="member-stack">
+                        <div class="stack-avatars">
+                            <div class="stack-avatar" style="background:#4158d0"></div>
+                            <div class="stack-avatar" style="background:#f59e0b"></div>
+                            <div class="stack-avatar" style="background:#10b981"></div>
+                            <div class="stack-avatar" style="background:#f5576c"></div>
+                            <div class="stack-avatar" style="background:#8b5cf6"></div>
+                        </div>
+                        <span class="stack-text">Alex, Maria and 24,612 others are members</span>
+                    </div>
+                </div>
+                <div class="group-actions">
+                    <button class="grp-btn joined">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" /></svg>
+                        Joined
+                    </button>
+                    <button class="grp-btn ghost">
+                        <svg viewBox="0 0 24 24"><path d="M19.993 9.042C19.48 5.017 16.054 2 11.996 2s-7.49 3.021-7.999 7.051L2.866 18H7.1c.463 2.282 2.481 4 4.9 4s4.437-1.718 4.9-4h4.236l-1.143-8.958z" /></svg>
+                        Invite
+                    </button>
+                    <button class="grp-btn ghost" style="padding:8px 10px">
+                        <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" /></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sub-nav -->
+        <div class="group-subnav">
+            <div class="subnav-tab active">Discussion</div>
+            <div class="subnav-tab">Members</div>
+            <div class="subnav-tab">Media</div>
+            <div class="subnav-tab">Events</div>
+            <div class="subnav-tab">About</div>
+            <div class="subnav-tab">More ▾</div>
+        </div>
+    </div>
+
+    <!-- Two-column content -->
+    <div class="content">
+
+        <!-- Feed (left) -->
+        <main class="feed-col">
+            <div class="compose-bar">
+                <div class="compose-top">
+                    <div class="compose-avatar"></div>
+                    <div class="compose-input">Write something to the group…</div>
+                </div>
+                <div class="compose-divider"></div>
+                <div class="compose-actions">
+                    <div class="compose-action">
+                        <svg viewBox="0 0 24 24" fill="#45bd62"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" /></svg>
+                        Live video
+                    </div>
+                    <div class="compose-action">
+                        <svg viewBox="0 0 24 24" fill="#1877f2"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" /></svg>
+                        Photo/video
+                    </div>
+                    <div class="compose-action">
+                        <svg viewBox="0 0 24 24" fill="#f7b928"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm3.5-9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm-7 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3.5 6c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5z" /></svg>
+                        Feeling
+                    </div>
+                </div>
+            </div>
+
+            <div id="feed">
+                <div class="sentinel" id="sentinel"></div>
+            </div>
+        </main>
+
+        <!-- About panel (right) -->
+        <aside class="right-col">
+            <div class="panel">
+                <div class="panel-title">About this group</div>
+                <div class="panel-row">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" /></svg>
+                    <div><strong>Public</strong> — Anyone can see who's in the group and what they post.</div>
+                </div>
+                <div class="panel-row">
+                    <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" /></svg>
+                    <div><strong>24,612 members</strong></div>
+                </div>
+                <div class="panel-row">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" /></svg>
+                    <div>Created <strong>March 2019</strong></div>
+                </div>
+                <div class="panel-divider"></div>
+                <p style="font-size:14px;color:var(--text-secondary);line-height:1.6">A community for sharing and discovering content from across the web. Everyone is welcome.</p>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Members <span style="font-size:14px;font-weight:400;color:var(--text-muted)">· 24,612</span></div>
+                <div class="members-grid" id="memberGrid"></div>
+                <button class="panel-btn">See all members</button>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Admins &amp; moderators</div>
+                <div id="adminList"></div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modal -->
+    <div class="image-modal" id="imageModal">
+        <div class="modal-backdrop" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <img class="modal-image" id="modalImage" src="" alt="">
+        </div>
+    </div>
+
+    <script>
+        let isLoading = false;
+        const memberColors = ['#4158d0', '#f59e0b', '#10b981', '#f5576c', '#8b5cf6', '#0093e9', '#44bec7', '#e9a534'];
+        const sidebarMembers = [];
+        const sidebarAdmins = [];
+
+        document.querySelectorAll('.subnav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.subnav-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+
+        function openModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        function fmtNum(n) {
+            if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+            return n;
+        }
+
+        function renderMembers() {
+            document.getElementById('memberGrid').innerHTML = sidebarMembers.map(m => `
+                <div class="member-thumb">
+                    <div class="member-thumb-av" style="background:${m.color};border-radius:8px"></div>
+                    <div class="member-thumb-name">${m.name.split(' ')[0]}</div>
+                </div>`).join('');
+        }
+
+        function renderAdmins() {
+            document.getElementById('adminList').innerHTML = sidebarAdmins.map(a => `
+                <div class="admin-row">
+                    <div class="admin-av" style="background:${a.color}"></div>
+                    <div>
+                        <div class="admin-name">${a.name}</div>
+                        <div class="admin-role">Admin</div>
+                    </div>
+                </div>`).join('');
+        }
+
+        async function loadPost() {
+            if (isLoading) return;
+            isLoading = true;
+            try {
+                const res = await fetch('/api/post/random');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const post = await res.json();
+
+                const imagePath = '/files/' + post.image.replace(/\\/g, '/');
+                const avatarPath = post.avatar ? '/files/' + post.avatar.replace(/\\/g, '/') : null;
+                const color = post.color || memberColors[Math.floor(Math.random() * memberColors.length)];
+                const avatarHtml = avatarPath
+                    ? `<img src="${avatarPath}" alt="">`
+                    : `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="${color}"/><text x="12" y="16" text-anchor="middle" font-size="8" font-family="Inter,sans-serif" font-weight="700" fill="#fff">${post.initials}</text></svg>`;
+
+                const likes = Math.floor(Math.random() * 5000) + 20;
+                const comments = Math.floor(Math.random() * 500) + 2;
+                const shares = Math.floor(Math.random() * 200) + 1;
+                const isAdmin = Math.random() > 0.82;
+
+                if (sidebarMembers.length < 9) { sidebarMembers.push({ name: post.username, color }); renderMembers(); }
+                if (isAdmin && sidebarAdmins.length < 3) { sidebarAdmins.push({ name: post.username, color }); renderAdmins(); }
+
+                const card = document.createElement('div');
+                card.className = 'post-card';
+                if (post.mediaType == "image") {
+
+                    card.innerHTML = `
+                    <div class="post-header">
+                        <div class="post-avatar">${avatarHtml}</div>
+                        <div class="post-meta">
+                            <div class="post-name">${post.username}${isAdmin ? '<span class="admin-badge">Admin</span>' : ''}</div>
+                            <div class="post-sub">
+                                ${post.timeAgo} ·
+                                <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/></svg>
+                            </div>
+                        </div>
+                        <button class="post-more">
+                            <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                        </button>
+                    </div>
+                    <div class="post-text">${post.caption}</div>
+                    <img class="post-image" src="${imagePath}" alt="" loading="lazy" onclick="openModal('${imagePath}')">
+                    <div class="post-stats">
+                        <div style="display:flex;align-items:center;gap:4px">
+                            <div class="reaction-icons">
+                                <div class="reaction-icon" style="background:#2374e1">👍</div>
+                                <div class="reaction-icon" style="background:#f33e58">❤️</div>
+                                <div class="reaction-icon" style="background:#f7b125">😂</div>
+                            </div>
+                            <span class="reaction-count">${fmtNum(likes)}</span>
+                        </div>
+                        <span class="post-comment-count">${fmtNum(comments)} comments · ${fmtNum(shares)} shares</span>
+                    </div>
+                    <div class="post-actions">
+                        <button class="post-action" onclick="this.classList.toggle('liked')">
+                            <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+                            Like
+                        </button>
+                        <button class="post-action">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Comment
+                        </button>
+                        <button class="post-action">
+                            <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Share
+                        </button>
+                    </div>
+                `;
+                }
+                else if (post.mediaType == "video") {
+
+                    card.innerHTML = `
+    <div class="post-header">
+        <div class="post-avatar">${avatarHtml}</div>
+        <div class="post-meta">
+            <div class="post-name">${post.username}${isAdmin ? '<span class="admin-badge">Admin</span>' : ''}</div>
+            <div class="post-sub">
+                ${post.timeAgo} ·
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/></svg>
+            </div>
+        </div>
+        <button class="post-more">
+            <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
+    </div>
+    <div class="post-text">${post.caption}</div>
+    <video class="post-image" src="${imagePath}" alt="" loading="lazy" controls loop onclick="openModal('${imagePath}')"></video>
+    <div class="post-stats">
+        <div style="display:flex;align-items:center;gap:4px">
+            <div class="reaction-icons">
+                <div class="reaction-icon" style="background:#2374e1">👍</div>
+                <div class="reaction-icon" style="background:#f33e58">❤️</div>
+                <div class="reaction-icon" style="background:#f7b125">😂</div>
+            </div>
+            <span class="reaction-count">${fmtNum(likes)}</span>
+        </div>
+        <span class="post-comment-count">${fmtNum(comments)} comments · ${fmtNum(shares)} shares</span>
+    </div>
+    <div class="post-actions">
+        <button class="post-action" onclick="this.classList.toggle('liked')">
+            <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+            Like
+        </button>
+        <button class="post-action">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Comment
+        </button>
+        <button class="post-action">
+            <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Share
+        </button>
+    </div>
+`;
+                }
+
+                document.getElementById('sentinel').parentNode.insertBefore(card, document.getElementById('sentinel'));
+            } catch (err) {
+                console.error(err);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting && !isLoading) loadPost(); });
+        }, { rootMargin: '400px' });
+
+        observer.observe(document.getElementById('sentinel'));
+
+        async function init() {
+            for (let i = 0; i < 4; i++) {
+                await loadPost();
+                await new Promise(r => setTimeout(r, 300));
+            }
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

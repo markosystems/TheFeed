@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeFeed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #000;
+            --bg-secondary: #0f0f0f;
+            --bg-hover: #080808;
+            --border: #2f3336;
+            --text-primary: #e7e9ea;
+            --text-secondary: #71767b;
+            --accent: #1d9bf0;
+            --accent-hover: #1a8cd8;
+            --like: #f91880;
+            --repost: #00ba7c;
+            --radius: 16px;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Layout ── */
+        .layout {
+            display: flex;
+            width: 100%;
+            max-width: 1265px;
+            position: relative;
+        }
+
+        /* ── Left Nav ── */
+        .left-nav {
+            width: 275px;
+            flex-shrink: 0;
+            padding: 0 12px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+        }
+
+        @media (max-width: 1024px) { .left-nav { width: 88px; } }
+        @media (max-width: 640px)  { .left-nav { display: none; } }
+
+        .nav-logo {
+            padding: 12px;
+            margin: 4px 0 4px;
+            display: inline-flex;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .nav-logo:hover { background: rgba(255,255,255,0.1); }
+
+        .nav-logo svg { width: 28px; height: 28px; fill: var(--text-primary); }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 12px;
+            border-radius: 9999px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 400;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover { background: rgba(255,255,255,0.1); }
+
+        .nav-item.active { font-weight: 700; }
+
+        .nav-item svg {
+            width: 26px;
+            height: 26px;
+            fill: var(--text-primary);
+            flex-shrink: 0;
+        }
+
+        .nav-label { color: var(--text-primary); }
+
+        @media (max-width: 1024px) { .nav-label { display: none; } }
+
+        .post-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 9999px;
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: background 0.15s;
+            width: 100%;
+        }
+
+        .post-btn:hover { background: var(--accent-hover); }
+
+        @media (max-width: 1024px) {
+            .post-btn { width: 50px; height: 50px; padding: 0; font-size: 24px; border-radius: 50%; }
+            .post-btn-label { display: none; }
+        }
+
+        /* ── Feed column ── */
+        .feed-col {
+            flex: 1;
+            border-right: 1px solid var(--border);
+            min-width: 0;
+            max-width: 600px;
+        }
+
+        .feed-header {
+            position: sticky;
+            top: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 10;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .feed-header-title {
+            padding: 15px 16px;
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .feed-tabs {
+            display: flex;
+        }
+
+        .feed-tab {
+            flex: 1;
+            text-align: center;
+            padding: 16px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: relative;
+            transition: background 0.15s;
+        }
+
+        .feed-tab:hover { background: rgba(255,255,255,0.03); }
+
+        .feed-tab.active {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .feed-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 56px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 9999px;
+        }
+
+        /* ── Tweet ── */
+        .tweet {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.15s;
+            animation: fadeIn 0.2s ease both;
+        }
+
+        .tweet:hover { background: rgba(255,255,255,0.03); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        .tweet-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: #333;
+        }
+
+        .tweet-avatar img, .tweet-avatar svg { width: 100%; height: 100%; display: block; }
+
+        .tweet-body { flex: 1; min-width: 0; }
+
+        .tweet-header {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-bottom: 2px;
+        }
+
+        .tweet-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .tweet-handle {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        .tweet-dot { color: var(--text-secondary); font-size: 15px; }
+
+        .tweet-time { font-size: 15px; color: var(--text-secondary); }
+
+        .tweet-text {
+            font-size: 15px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .tweet-image {
+            width: 100%;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .tweet-image img {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: cover;
+            display: block;
+            transition: opacity 0.15s;
+        }
+            .tweet-image video {
+                width: 100%;
+                height: auto;
+                max-height: 500px;
+                object-fit: contain;
+                display: block;
+                background: #000;
+            }
+
+        .tweet-image:hover img { opacity: 0.9; }
+
+        /* Tweet actions */
+        .tweet-actions {
+            display: flex;
+            justify-content: space-between;
+            max-width: 425px;
+            margin-top: 4px;
+        }
+
+        .tweet-action {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 9999px;
+            margin: -6px;
+            transition: color 0.15s;
+            background: none;
+            border: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tweet-action svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .tweet-action:hover { color: var(--accent); }
+        .tweet-action.like:hover  { color: var(--like); }
+        .tweet-action.like.liked  { color: var(--like); }
+        .tweet-action.repost:hover   { color: var(--repost); }
+        .tweet-action.repost.reposted { color: var(--repost); }
+
+        /* ── Right sidebar ── */
+        .right-col {
+            width: 348px;
+            flex-shrink: 0;
+            padding: 0 16px;
+            display: none;
+        }
+
+        @media (min-width: 1024px) { .right-col { display: block; } }
+
+        .search-wrap {
+            position: sticky;
+            top: 0;
+            padding: 8px 0 12px;
+            background: var(--bg);
+        }
+
+        .search-input-wrap {
+            position: relative;
+        }
+
+        .search-input-wrap svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            fill: var(--text-secondary);
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid transparent;
+            border-radius: 9999px;
+            padding: 10px 16px 10px 44px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .search-input::placeholder { color: var(--text-secondary); }
+        .search-input:focus { border-color: var(--accent); background: var(--bg); }
+
+        .right-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .right-card-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .trend-item {
+            padding: 12px 0;
+            border-top: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .trend-item:first-child { border-top: none; }
+        .trend-item:hover { opacity: 0.8; }
+
+        .trend-cat  { font-size: 13px; color: var(--text-secondary); }
+        .trend-name { font-size: 15px; font-weight: 700; }
+        .trend-count { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+        /* ── Modal ── */
+        .image-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-modal.active { display: flex; animation: fadeIn 0.15s ease; }
+
+        .modal-backdrop { position: absolute; inset: 0; cursor: zoom-out; }
+
+        .modal-content {
+            position: relative;
+            max-width: min(92vw, 900px);
+            max-height: 90vh;
+            z-index: 1;
+            animation: scaleIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.93); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 16px;
+            display: block;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -14px;
+            right: -14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: background 0.15s, color 0.15s;
+            z-index: 2;
+        }
+
+        .modal-close:hover { background: #222; color: var(--text-primary); }
+
+        /* ── Mobile header ── */
+        .mobile-header {
+            display: none;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @media (max-width: 640px) { .mobile-header { display: flex; } }
+
+        .mobile-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .sentinel { height: 1px; }
+    </style>
+</head>
+<body>
+<div class="layout">
+
+    <!-- Left Nav -->
+    <nav class="left-nav">
+        <div class="nav-logo">
+            <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </div>
+        <div class="nav-item active">
+            <svg viewBox="0 0 24 24"><path d="M12 1.696L.622 8.807l1.06 1.696L3 9.679V19.5C3 20.881 4.119 22 5.5 22h13c1.381 0 2.5-1.119 2.5-2.5V9.679l1.318.824 1.06-1.696L12 1.696zM12 16.5c-1.933 0-3.5-1.567-3.5-3.5s1.567-3.5 3.5-3.5 3.5 1.567 3.5 3.5-1.567 3.5-3.5 3.5z"/></svg>
+            <span class="nav-label">Home</span>
+        </div>
+        <div class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M10.25 3.75c-3.59 0-6.5 2.91-6.5 6.5s2.91 6.5 6.5 6.5c1.795 0 3.419-.726 4.596-1.904 1.178-1.177 1.904-2.801 1.904-4.596 0-3.59-2.91-6.5-6.5-6.5zm-8.5 6.5c0-4.694 3.806-8.5 8.5-8.5 4.694 0 8.5 3.806 8.5 8.5 0 1.986-.682 3.815-1.814 5.272l4.521 4.521-1.414 1.414-4.521-4.521C13.815 19.568 11.986 20.25 10.25 20.25c-4.694 0-8.5-3.806-8.5-8.5z"/></svg>
+            <span class="nav-label">Explore</span>
+        </div>
+        <div class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M19.993 9.042C19.48 5.017 16.054 2 11.996 2s-7.49 3.021-7.999 7.051L2.866 18H7.1c.463 2.282 2.481 4 4.9 4s4.437-1.718 4.9-4h4.236l-1.143-8.958zM12 20c-1.306 0-2.417-.835-2.829-2h5.658c-.412 1.165-1.523 2-2.829 2zm-6.866-4l.847-6.698C6.389 6.following 8.941 4 11.996 4s5.607 2 6.022 5.302L18.866 16H5.134z"/></svg>
+            <span class="nav-label">Notifications</span>
+        </div>
+        <div class="nav-item">
+            <svg viewBox="0 0 24 24"><path d="M1.998 5.5c0-1.381 1.119-2.5 2.5-2.5h15c1.381 0 2.5 1.119 2.5 2.5v13c0 1.381-1.119 2.5-2.5 2.5h-15c-1.381 0-2.5-1.119-2.5-2.5v-13zm2.5-.5c-.276 0-.5.224-.5.5v2.764l8 3.638 8-3.638V5.5c0-.276-.224-.5-.5-.5h-15zm15.5 5.463l-8 3.636-8-3.636V18.5c0 .276.224.5.5.5h15c.276 0 .5-.224.5-.5v-8.037z"/></svg>
+            <span class="nav-label">Messages</span>
+        </div>
+        <button class="post-btn"><span class="post-btn-label">Post</span><span style="display:none" class="post-btn-icon">+</span></button>
+    </nav>
+
+    <!-- Feed -->
+    <div class="feed-col">
+        <div class="mobile-header">
+            <div class="mobile-avatar"></div>
+            <svg style="width:24px;height:24px;fill:#fff" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            <div style="width:32px"></div>
+        </div>
+        <div class="feed-header">
+            <div class="feed-header-title">LeFeed</div>
+            <div class="feed-tabs">
+                <div class="feed-tab active">For you</div>
+                <div class="feed-tab">Following</div>
+            </div>
+        </div>
+
+        <div id="feed">
+            <div class="sentinel" id="sentinel"></div>
+        </div>
+    </div>
+
+    <!-- Right Col -->
+    <div class="right-col">
+        <div class="search-wrap">
+            <div class="search-input-wrap">
+                <svg viewBox="0 0 24 24"><path d="M10.25 3.75c-3.59 0-6.5 2.91-6.5 6.5s2.91 6.5 6.5 6.5c1.795 0 3.419-.726 4.596-1.904 1.178-1.177 1.904-2.801 1.904-4.596 0-3.59-2.91-6.5-6.5-6.5zm-8.5 6.5c0-4.694 3.806-8.5 8.5-8.5 4.694 0 8.5 3.806 8.5 8.5 0 1.986-.682 3.815-1.814 5.272l4.521 4.521-1.414 1.414-4.521-4.521C13.815 19.568 11.986 20.25 10.25 20.25c-4.694 0-8.5-3.806-8.5-8.5z"/></svg>
+                <input class="search-input" type="text" placeholder="Search">
+            </div>
+        </div>
+        <div class="right-card">
+            <div class="right-card-title">What's happening</div>
+            <div class="trend-item">
+                <div class="trend-cat">Technology · Trending</div>
+                <div class="trend-name">#OpenSource</div>
+                <div class="trend-count">42.1K posts</div>
+            </div>
+            <div class="trend-item">
+                <div class="trend-cat">Sports · Trending</div>
+                <div class="trend-name">#WorldCup</div>
+                <div class="trend-count">218K posts</div>
+            </div>
+            <div class="trend-item">
+                <div class="trend-cat">Trending in your area</div>
+                <div class="trend-name">#LocalNews</div>
+                <div class="trend-count">8,452 posts</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="image-modal" id="imageModal">
+    <div class="modal-backdrop" onclick="closeModal()"></div>
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <img class="modal-image" id="modalImage" src="" alt="">
+    </div>
+</div>
+
+<script>
+    let isLoading = false;
+
+    // Tab switching
+    document.querySelectorAll('.feed-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+        });
+    });
+
+    function openModal(src) {
+        document.getElementById('modalImage').src = src;
+        document.getElementById('imageModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    function fmtNum(n) {
+        if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,'') + 'M';
+        if (n >= 1000)    return (n/1000).toFixed(1).replace(/\.0$/,'') + 'K';
+        return n;
+    }
+
+    async function loadPost() {
+        if (isLoading) return;
+        isLoading = true;
+        try {
+            const res = await fetch('/api/post/random/GUIDO');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const post = await res.json();
+
+            const imagePath = '/files/' + post.image.replace(/\\/g, '/');
+            const avatarPath = post.avatar ? '/files/' + post.avatar.replace(/\\/g, '/') : null;
+            const avatarHtml = avatarPath
+                ? `<img src="${avatarPath}" alt="">`
+                : `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="${post.color}"/><text x="12" y="16" text-anchor="middle" font-size="8" font-family="Inter,sans-serif" font-weight="700" fill="#fff">${post.initials}</text></svg>`;
+
+            const likes   = Math.floor(Math.random() * 50000) + 100;
+            const reposts = Math.floor(Math.random() * 10000) + 10;
+            const replies = Math.floor(Math.random() * 5000)  + 5;
+            const views   = Math.floor(Math.random() * 500000) + 1000;
+
+            const tweet = document.createElement('div');
+            tweet.className = 'tweet';
+            if (post.mediaType == "image") {
+                tweet.innerHTML = `
+                <div class="tweet-avatar">${avatarHtml}</div>
+                <div class="tweet-body">
+                    <div class="tweet-header">
+                        <span class="tweet-name">${post.username}</span>
+                        <span class="tweet-handle">@${post.username.toLowerCase().replace(/\s/g, '_')}</span>
+                        <span class="tweet-dot">·</span>
+                        <span class="tweet-time">${post.timeAgo}</span>
+                    </div>
+                    <div class="tweet-text">${post.caption}</div>
+                    <div class="tweet-image" onclick="openModal('${imagePath}')">
+                        <img src="${imagePath}" alt="" loading="lazy">
+                    </div>
+                    <div class="tweet-actions">
+                        <button class="tweet-action reply" onclick="event.stopPropagation()">
+                            <svg viewBox="0 0 24 24"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"/></svg>
+                            <span>${fmtNum(replies)}</span>
+                        </button>
+                        <button class="tweet-action repost" onclick="toggleRepost(this);event.stopPropagation()">
+                            <svg viewBox="0 0 24 24"><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 3H11V1h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V5c0-1.1-.896-2-2-2z"/></svg>
+                            <span>${fmtNum(reposts)}</span>
+                        </button>
+                        <button class="tweet-action like" onclick="toggleLike(this);event.stopPropagation()">
+                            <svg viewBox="0 0 24 24"><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"/></svg>
+                            <span>${fmtNum(likes)}</span>
+                        </button>
+                        <button class="tweet-action" onclick="event.stopPropagation()">
+                            <svg viewBox="0 0 24 24"><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></svg>
+                            <span>${fmtNum(views)}</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            }
+            else if (post.mediaType == "video") {
+                tweet.innerHTML = `
+    <div class="tweet-avatar">${avatarHtml}</div>
+    <div class="tweet-body">
+        <div class="tweet-header">
+            <span class="tweet-name">${post.username}</span>
+            <span class="tweet-handle">@${post.username.toLowerCase().replace(/\s/g, '_')}</span>
+            <span class="tweet-dot">·</span>
+            <span class="tweet-time">${post.timeAgo}</span>
+        </div>
+        <div class="tweet-text">${post.caption}</div>
+        <div class="tweet-image" onclick="openModal('${imagePath}')">
+            <video src="${imagePath}" alt="" loading="lazy" controls loop></video>
+        </div>
+        <div class="tweet-actions">
+            <button class="tweet-action reply" onclick="event.stopPropagation()">
+                <svg viewBox="0 0 24 24"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"/></svg>
+                <span>${fmtNum(replies)}</span>
+            </button>
+            <button class="tweet-action repost" onclick="toggleRepost(this);event.stopPropagation()">
+                <svg viewBox="0 0 24 24"><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 3H11V1h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V5c0-1.1-.896-2-2-2z"/></svg>
+                <span>${fmtNum(reposts)}</span>
+            </button>
+            <button class="tweet-action like" onclick="toggleLike(this);event.stopPropagation()">
+                <svg viewBox="0 0 24 24"><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"/></svg>
+                <span>${fmtNum(likes)}</span>
+            </button>
+            <button class="tweet-action" onclick="event.stopPropagation()">
+                <svg viewBox="0 0 24 24"><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></svg>
+                <span>${fmtNum(views)}</span>
+            </button>
+        </div>
+    </div>
+`;
+
+            }
+
+            const sentinel = document.getElementById('sentinel');
+            sentinel.parentNode.insertBefore(tweet, sentinel);
+        } catch(err) {
+            console.error(err);
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    function toggleLike(btn) {
+        btn.classList.toggle('liked');
+        const span = btn.querySelector('span');
+        const svg = btn.querySelector('svg');
+        let n = span.textContent.endsWith('K') ? parseFloat(span.textContent)*1000 :
+                span.textContent.endsWith('M') ? parseFloat(span.textContent)*1000000 :
+                parseInt(span.textContent);
+        if (btn.classList.contains('liked')) {
+            n++;
+            svg.innerHTML = '<path d="M20.884 13.19c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"/>';
+        } else {
+            n--;
+            svg.innerHTML = '<path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"/>';
+        }
+        span.textContent = fmtNum(n);
+    }
+
+    function toggleRepost(btn) {
+        btn.classList.toggle('reposted');
+        const span = btn.querySelector('span');
+        let n = span.textContent.endsWith('K') ? parseFloat(span.textContent)*1000 : parseInt(span.textContent);
+        n += btn.classList.contains('reposted') ? 1 : -1;
+        span.textContent = fmtNum(n);
+    }
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting && !isLoading) loadPost(); });
+    }, { rootMargin: '400px' });
+
+    observer.observe(document.getElementById('sentinel'));
+
+    async function init() {
+        for (let i = 0; i < 5; i++) {
+            await loadPost();
+            await new Promise(r => setTimeout(r, 300));
+        }
+    }
+
+    window.addEventListener('load', init);
+</script>
+</body>
+</html>

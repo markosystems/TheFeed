@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeFeed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        .post-image-wrap video {
+            width: 100%;
+            height: auto;
+            max-height: 512px;
+            object-fit: contain; /* contain suits video better than cover */
+            display: block;
+            background: #000;
+        }
+
+        :root {
+            --bg-primary: #0e0e10;
+            --bg-secondary: #161618;
+            --bg-tertiary: #1e1e21;
+            --bg-hover: #26262b;
+            --border: #2d2d32;
+            --border-subtle: #222226;
+            --text-primary: #e4e4e7;
+            --text-secondary: #71717a;
+            --text-muted: #52525b;
+            --upvote-active: #ff6314;
+            --downvote-active: #818cf8;
+            --accent: #818cf8;
+            --accent-hover: #6366f1;
+            --radius-sm: 4px;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-full: 9999px;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── Header ─── */
+        header {
+            width: 100%;
+            height: 52px;
+            padding: 0 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            background: rgba(22, 22, 24, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.02em;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .logo-icon svg {
+            width: 16px;
+            height: 16px;
+            fill: #fff;
+        }
+
+        .search-wrap {
+            flex: 1;
+            max-width: 360px;
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .search-bar {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            padding: 0.45rem 1rem 0.45rem 2.25rem;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .search-bar::placeholder { color: var(--text-muted); }
+
+        .search-bar:focus {
+            border-color: var(--accent);
+            background: var(--bg-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .header-btn {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            padding: 0.35rem 0.9rem;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+
+        .header-btn:hover {
+            background: var(--bg-hover);
+            border-color: #555;
+        }
+
+        .header-btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .header-btn.primary:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        /* ─── Layout ─── */
+        .container {
+            display: flex;
+            flex: 1;
+            gap: 1.25rem;
+            padding: 1.25rem 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            align-items: flex-start;
+        }
+
+        /* ─── Left Sidebar ─── */
+        .sidebar {
+            display: none;
+            width: 240px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 64px;
+        }
+
+        @media (min-width: 768px) {
+            .sidebar { display: block; }
+        }
+
+        .sidebar-section {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 0.5rem 0.75rem;
+        }
+
+        .community-item {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.45rem 0.75rem;
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: background 0.1s;
+        }
+
+        .community-item:hover { background: var(--bg-hover); }
+
+        .community-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .community-avatar.red    { background: #ef4444; }
+        .community-avatar.amber  { background: #f59e0b; }
+        .community-avatar.teal   { background: #14b8a6; }
+
+        .community-info {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* ─── Feed ─── */
+        .feed {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+            min-width: 0;
+            max-width: 680px;
+        }
+
+        /* Sort bar */
+        .sort-bar {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .sort-btn {
+            background: none;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 0.35rem 0.75rem;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: background 0.1s, color 0.1s;
+        }
+
+        .sort-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+        .sort-btn.active {
+            color: var(--accent);
+            background: rgba(129, 140, 248, 0.1);
+        }
+
+        .sort-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* Post card */
+        .post {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            overflow: hidden;
+            display: flex;
+            transition: border-color 0.15s;
+            animation: fadeUp 0.25s ease both;
+        }
+
+        .post:hover { border-color: var(--border); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Vote strip */
+        .post-votes {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.75rem 0.5rem;
+            background: var(--bg-tertiary);
+            min-width: 44px;
+            gap: 2px;
+        }
+
+        .vote-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-sm);
+            transition: color 0.1s, background 0.1s;
+            line-height: 0;
+        }
+
+        .vote-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .vote-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+        .vote-btn.upvoted   { color: var(--upvote-active); }
+        .vote-btn.downvoted { color: var(--downvote-active); }
+
+        .vote-count {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            min-width: 28px;
+            text-align: center;
+            line-height: 1;
+            padding: 0.1rem 0;
+        }
+
+        /* Post body */
+        .post-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0.75rem 0.875rem 0.5rem;
+            min-width: 0;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .post-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .post-avatar img, .post-avatar svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .post-subreddit {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .post-subreddit:hover { text-decoration: underline; cursor: pointer; }
+
+        .dot-sep {
+            color: var(--text-muted);
+            font-size: 10px;
+        }
+
+        .post-author {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .post-author::before { content: 'u/'; }
+        .post-author:hover { text-decoration: underline; cursor: pointer; }
+
+        .post-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .post-title {
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.35;
+            color: var(--text-primary);
+            margin-bottom: 0.625rem;
+            word-break: break-word;
+            letter-spacing: -0.01em;
+        }
+
+        .post-image-wrap {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: 0.625rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .post-image-wrap img {
+            width: 100%;
+            height: auto;
+            max-height: 512px;
+            object-fit: cover;
+            display: block;
+            transition: opacity 0.15s;
+        }
+
+        .post-image-wrap:hover img { opacity: 0.92; }
+
+        .expand-hint {
+            position: absolute;
+            bottom: 0.5rem;
+            right: 0.5rem;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(4px);
+            border-radius: var(--radius-sm);
+            padding: 0.2rem 0.4rem;
+            font-size: 10px;
+            font-weight: 600;
+            color: #fff;
+            opacity: 0;
+            transition: opacity 0.15s;
+            pointer-events: none;
+        }
+
+        .post-image-wrap:hover .expand-hint { opacity: 1; }
+
+        .post-caption {
+            font-size: 13px;
+            line-height: 1.55;
+            color: var(--text-secondary);
+            margin-bottom: 0.625rem;
+            word-break: break-word;
+        }
+
+        /* Action bar */
+        .post-actions {
+            display: flex;
+            gap: 0.25rem;
+            margin-top: auto;
+            padding-top: 0.375rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: color 0.1s, background 0.1s;
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .action-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .action-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ─── Right Sidebar ─── */
+        .sidebar-right {
+            display: none;
+            width: 300px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 64px;
+        }
+
+        @media (min-width: 1100px) { .sidebar-right { display: block; } }
+
+        .sidebar-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .sidebar-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        /* ─── Sentinel ─── */
+        .sentinel { height: 1px; }
+
+
+
+        /* ─── Image Modal ─── */
+        .image-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.88);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-modal.active {
+            display: flex;
+            animation: fadeInModal 0.18s ease;
+        }
+
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            cursor: zoom-out;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: min(92vw, 900px);
+            max-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            animation: modalScale 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalScale {
+            from { transform: scale(0.92); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: var(--radius);
+            display: block;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -14px;
+            right: -14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            line-height: 1;
+            transition: background 0.15s, color 0.15s;
+            z-index: 2;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        /* ─── Mobile ─── */
+        @media (max-width: 640px) {
+            .search-wrap { max-width: none; }
+            .header-btn  { display: none; }
+
+            .container {
+                padding: 0.5rem;
+                gap: 0.5rem;
+            }
+
+            .feed { gap: 0.5rem; }
+
+            .post-votes {
+                min-width: 38px;
+                padding: 0.5rem 0.25rem;
+            }
+
+            .post-content { padding: 0.625rem 0.625rem 0.4rem; }
+
+            .post-title { font-size: 14px; }
+
+            .modal-close {
+                top: 0.25rem;
+                right: 0.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6h16M4 12h16M4 18h10" stroke="#fff" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                </svg>
+            </div>
+            LeFeed
+        </div>
+
+        <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" class="search-bar" placeholder="Search LeFeed">
+        </div>
+
+        <div class="header-actions">
+            <button class="header-btn">Log In</button>
+            <button class="header-btn primary">Sign Up</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Feeds</div>
+                <div class="community-item">
+                    <div class="community-avatar"></div>
+                    <div class="community-info">r/all</div>
+                </div>
+                <div class="community-item">
+                    <div class="community-avatar red"></div>
+                    <div class="community-info">r/Front Page</div>
+                </div>
+                <div class="community-item">
+                    <div class="community-avatar amber"></div>
+                    <div class="community-info">r/Trending</div>
+                </div>
+                <div class="community-item">
+                    <div class="community-avatar teal"></div>
+                    <div class="community-info">r/Popular</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Feed -->
+        <main class="feed" id="feed">
+            <!-- Sort bar -->
+            <div class="sort-bar">
+                <button class="sort-btn active">
+                    <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+                    Best
+                </button>
+                <button class="sort-btn">
+                    <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    Hot
+                </button>
+                <button class="sort-btn">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+                    New
+                </button>
+                <button class="sort-btn">
+                    <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+                    Top
+                </button>
+            </div>
+
+            <div class="sentinel" id="sentinel"></div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar-right">
+            <div class="sidebar-card">
+                <div class="sidebar-title">About LeFeed</div>
+                <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                    Your personal feed reader with infinite scroll. Discover content from communities you love.
+                </p>
+            </div>
+            <div class="sidebar-card">
+                <div class="sidebar-title">LeFeed Rules</div>
+                <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                    Be kind. Stay on topic. No spam. Report anything that breaks the rules.
+                </p>
+            </div>
+        </aside>
+    </div>
+
+
+
+    <!-- Image Modal -->
+    <div class="image-modal" id="imageModal">
+        <div class="modal-backdrop" onclick="closeImageModal()"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeImageModal()" aria-label="Close">×</button>
+            <img class="modal-image" id="modalImage" src="" alt="">
+        </div>
+    </div>
+
+    <script>
+        let isLoading = false;
+
+        // ── Modal ──
+        function openImageModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeImageModal(); });
+
+        // ── Sort bar interaction ──
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+
+
+        // ── Load post ──
+        async function loadPost() {
+            if (isLoading) return;
+            isLoading = true;
+
+            try {
+                const res = await fetch('/api/post/random/GUIDO');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const post = await res.json();
+
+                const article = document.createElement('article');
+                article.className = 'post';
+
+                let avatarHtml = '';
+                if (post.avatar) {
+                    avatarHtml = `<img src="/files/${post.avatar.replace(/\\/g, '/')}" alt="">`;
+                } else {
+                    avatarHtml = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="${post.color}"/><text x="12" y="16" text-anchor="middle" font-size="8" font-family="Inter,sans-serif" font-weight="700" fill="#fff">${post.initials}</text></svg>`;
+                }
+
+                const votes = post.likes >= 1000 ? (post.likes / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : post.likes;
+                const imagePath = '/files/' + post.image.replace(/\\/g, '/');
+
+                if (post.mediaType == "image") {
+
+                    article.innerHTML = `
+                  <div class="post-votes">
+                    <button class="vote-btn" onclick="toggleUpvote(this)" aria-label="upvote">
+                      <svg viewBox="0 0 24 24"><path d="M12 4L4 14h5v6h6v-6h5L12 4z"/></svg>
+                    </button>
+                    <div class="vote-count" data-votes="${post.likes}">${votes}</div>
+                    <button class="vote-btn" onclick="toggleDownvote(this)" aria-label="downvote">
+                      <svg viewBox="0 0 24 24"><path d="M12 20l8-10h-5V4H9v6H4l8 10z"/></svg>
+                    </button>
+                  </div>
+                  <div class="post-content">
+                    <div class="post-header">
+                      <div class="post-avatar">${avatarHtml}</div>
+                      <span class="post-subreddit">r/${post.subreddit || 'LeFeed'}</span>
+                      <span class="dot-sep">·</span>
+                      <span class="post-author">${post.username}</span>
+                      <span class="post-time">${post.timeAgo}</span>
+                    </div>
+                    <div class="post-title">${post.title || post.caption}</div>
+                    <div class="post-image-wrap" onclick="openImageModal('${imagePath}')">
+                      <img src="${imagePath}" alt="" loading="lazy">
+                      <span class="expand-hint">View full image</span>
+                    </div>
+                    <p class="post-caption">${post.caption}</p>
+                    <div class="post-actions">
+                      <button class="action-btn" aria-label="comment">
+                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <span>Comment</span>
+                      </button>
+                      <button class="action-btn" aria-label="share">
+                        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        <span>Share</span>
+                      </button>
+                      <button class="action-btn" aria-label="save">
+                        <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                        <span>Save</span>
+                      </button>
+                    </div>
+                  </div>
+                `;
+                }
+                else if (post.mediaType == "video") {
+                    article.innerHTML = `
+  <div class="post-votes">
+    <button class="vote-btn" onclick="toggleUpvote(this)" aria-label="upvote">
+      <svg viewBox="0 0 24 24"><path d="M12 4L4 14h5v6h6v-6h5L12 4z"/></svg>
+    </button>
+    <div class="vote-count" data-votes="${post.likes}">${votes}</div>
+    <button class="vote-btn" onclick="toggleDownvote(this)" aria-label="downvote">
+      <svg viewBox="0 0 24 24"><path d="M12 20l8-10h-5V4H9v6H4l8 10z"/></svg>
+    </button>
+  </div>
+  <div class="post-content">
+    <div class="post-header">
+      <div class="post-avatar">${avatarHtml}</div>
+      <span class="post-subreddit">r/${post.subreddit || 'LeFeed'}</span>
+      <span class="dot-sep">·</span>
+      <span class="post-author">${post.username}</span>
+      <span class="post-time">${post.timeAgo}</span>
+    </div>
+    <div class="post-title">${post.title || post.caption}</div>
+    <div class="post-image-wrap" onclick="openImageModal('${imagePath}')">
+      <video src="${imagePath}" alt="" loading="lazy" controls loop></video>
+      <span class="expand-hint">View full image</span>
+    </div>
+    <p class="post-caption">${post.caption}</p>
+    <div class="post-actions">
+      <button class="action-btn" aria-label="comment">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Comment</span>
+      </button>
+      <button class="action-btn" aria-label="share">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <span>Share</span>
+      </button>
+      <button class="action-btn" aria-label="save">
+        <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <span>Save</span>
+      </button>
+    </div>
+  </div>
+`;
+                }
+
+                const sentinel = document.getElementById('sentinel');
+                sentinel.parentNode.insertBefore(article, sentinel);
+            } catch (err) {
+                console.error('Error loading post:', err);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // ── Voting ──
+        function toggleUpvote(btn) {
+            const post = btn.closest('.post');
+            const downvoteBtn = post.querySelector('.vote-btn:last-of-type');
+            const voteCount = post.querySelector('.vote-count');
+
+            if (btn.classList.contains('upvoted')) {
+                btn.classList.remove('upvoted');
+                voteCount.textContent = decrementVotes(voteCount);
+            } else {
+                btn.classList.add('upvoted');
+                downvoteBtn.classList.remove('downvoted');
+                voteCount.textContent = incrementVotes(voteCount);
+            }
+        }
+
+        function toggleDownvote(btn) {
+            const post = btn.closest('.post');
+            const upvoteBtn = post.querySelector('.vote-btn:first-of-type');
+            const voteCount = post.querySelector('.vote-count');
+
+            if (btn.classList.contains('downvoted')) {
+                btn.classList.remove('downvoted');
+                voteCount.textContent = incrementVotes(voteCount);
+            } else {
+                btn.classList.add('downvoted');
+                upvoteBtn.classList.remove('upvoted');
+                voteCount.textContent = decrementVotes(voteCount);
+            }
+        }
+
+        function incrementVotes(el) {
+            const raw = el.textContent;
+            let n = raw.endsWith('k') ? Math.round(parseFloat(raw) * 1000) : parseInt(raw);
+            n++;
+            return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : n;
+        }
+
+        function decrementVotes(el) {
+            const raw = el.textContent;
+            let n = raw.endsWith('k') ? Math.round(parseFloat(raw) * 1000) : parseInt(raw);
+            n--;
+            return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : n;
+        }
+
+        // ── Infinite scroll ──
+        const sentinel = document.getElementById('sentinel');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting && !isLoading) loadPost();
+            });
+        }, { rootMargin: '300px' });
+
+        observer.observe(sentinel);
+
+        async function loadInitialPosts() {
+            for (let i = 0; i < 4; i++) {
+                await loadPost();
+                await new Promise(resolve => setTimeout(resolve, 400));
+            }
+        }
+
+        window.addEventListener('load', loadInitialPosts);
+    </script>
+</body>
+</html>
