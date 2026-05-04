@@ -10,7 +10,7 @@ namespace TheFeed
         public static Config Config { get; set; }
 
         public static Dictionary<string, Feed> Feeds = new Dictionary<string, Feed>();
-        JsonSerializerOptions jsonOptions = new JsonSerializerOptions
+        static JsonSerializerOptions jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = true
@@ -33,7 +33,7 @@ namespace TheFeed
                     TopDir = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
                     inspiretext = "inspire.txt"
                 };
-                string json = JsonSerializer.Serialize(Config, new JsonSerializerOptions { WriteIndented = true });
+                string json = JsonSerializer.Serialize(Config, jsonOptions);
                 File.WriteAllText(configPath, json);
                 Console.WriteLine("Starting with default config. Please fill out config.config and restart the server for custom settings.");
             }
@@ -56,7 +56,7 @@ namespace TheFeed
                             TopDir = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
                             inspiretext = "inspire.txt"
                         };
-                        string json = JsonSerializer.Serialize(Config, new JsonSerializerOptions { WriteIndented = true });
+                        string json = JsonSerializer.Serialize(Config, jsonOptions);
                         File.WriteAllText(configPath, json);
                         Console.WriteLine("Config reset. Please fill out config.config and restart the server.");
                         return;
@@ -67,7 +67,7 @@ namespace TheFeed
                     try
                     {
                         Config.TopDir = args[1];
-                        string json = JsonSerializer.Serialize(Config, new JsonSerializerOptions { WriteIndented = true });
+                        string json = JsonSerializer.Serialize(Config, jsonOptions);
                         File.WriteAllText(configPath, json);
                     }
                     catch (Exception ex)
@@ -82,7 +82,7 @@ namespace TheFeed
                     try
                     {
                         Config.Port = int.Parse(args[1]);
-                        string json = JsonSerializer.Serialize(Config, new JsonSerializerOptions { WriteIndented = true });
+                        string json = JsonSerializer.Serialize(Config, jsonOptions);
                         File.WriteAllText(configPath, json);
                     }
                     catch (Exception ex)
@@ -97,7 +97,7 @@ namespace TheFeed
                     try
                     {
                         Config.inspiretext = args[1];
-                        string json = JsonSerializer.Serialize(Config, new JsonSerializerOptions { WriteIndented = true });
+                        string json = JsonSerializer.Serialize(Config, jsonOptions);
                         File.WriteAllText(configPath, json);
                     }
                     catch (Exception ex)
@@ -112,7 +112,7 @@ namespace TheFeed
                     try
                     {
                         Config.Title = args[1];
-                        string json = JsonSerializer.Serialize(Config, new JsonSerializerOptions { WriteIndented = true });
+                        string json = JsonSerializer.Serialize(Config, jsonOptions);
                         File.WriteAllText(configPath, json);
                     }
                     catch (Exception ex)
