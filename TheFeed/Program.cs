@@ -12,7 +12,6 @@ namespace TheFeed
         public static Dictionary<string, Feed> Feeds = new Dictionary<string, Feed>();
         static JsonSerializerOptions jsonOptions = new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = true
         };
 
@@ -23,7 +22,6 @@ namespace TheFeed
         static bool DebugMode = false;
         public static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
             if (!File.Exists(configPath))
             {
                 Console.WriteLine("Config does not exist. please fill out config");
@@ -296,8 +294,12 @@ namespace TheFeed
             if (path.StartsWith("/ui/"))
             {
                 string newid = Guid.NewGuid().ToString();
+                if(Segments.Length > 3)
+                {
+                    f = new Feed(Config.TopDir, Config.inspiretext, map, Segments[3]);
+                }
                 Feeds[newid] = f;
-                return (await GetHtmlResponse(GetDefaultClientHtml(newid,path.Substring(4))), "text/html", 200);
+                return (await GetHtmlResponse(GetDefaultClientHtml(newid, Segments[2].Replace("/","").Replace("\\",""))), "text/html", 200);
             }
             return (GetErrorResponse(404, "Not Found"), "application/json", 404);
         }

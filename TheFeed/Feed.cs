@@ -35,6 +35,24 @@ namespace TheFeed
 
             LoadFeed(map);
         }
+        public Feed(string rootDir, string inspirePath, HashMap map, string filter)
+        {
+            _rootDir = rootDir;
+            _inspirePath = inspirePath;
+
+            // Load quotes
+            _quotes = File.Exists(_inspirePath)
+                ? File.ReadAllLines(_inspirePath)
+                      .Select(l => l.Trim())
+                      .Where(l => l.Length > 0)
+                      .ToArray()
+                : new[] { "Stay inspired.", "Make today count.", "Keep going." };
+
+            _users = new List<User>();
+            _feedItems = new List<FeedItem>();
+
+            LoadFeed(map, filter);
+        }
 
         private void LoadFeed(HashMap map)
         {
@@ -106,6 +124,77 @@ namespace TheFeed
             FeedItems.AddRange(_feedItems);
         }
 
+        private void LoadFeed(HashMap map, string filter)
+        {
+            string[] userDirs = Directory.GetDirectories(_rootDir)
+                .OrderBy(d => d).Where(d => d.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            foreach (string userDir in userDirs)
+            {
+                string username = Path.GetFileName(userDir);
+
+                // Skip hidden / system dirs
+                if (username.StartsWith(".") || username.StartsWith("_")) continue;
+
+                var MediaFiles = Directory.GetFiles(userDir, "*", SearchOption.AllDirectories)
+                    .Where(f => MediaExtensions.Contains(Path.GetExtension(f)))
+                    .OrderBy(f => f)
+                    .ToArray();
+
+                if (MediaFiles.Length == 0) continue;
+
+                // Use first image as avatar, remaining as posts
+                string avatarPath = MediaFiles.Length > 1 ? map.Map[MediaFiles[0]] : null;
+                var postFiles = MediaFiles.Length > 1 ? MediaFiles.Skip(1).ToArray() : MediaFiles;
+
+                var posts = postFiles.Select(imgPath => new Post(
+                    ImagePath: map.Map[imgPath],
+                    Caption: PickQuote(),
+                    TimeAgo: PickTimeAgo()
+                )).ToList();
+
+                var user = new User(username, avatarPath, posts);
+                _users.Add(user);
+
+                // Add to flat feed
+                foreach (var post in posts)
+                {
+                    var item = new FeedItem
+                    {
+                        Username = username,
+                        AvatarPath = avatarPath,
+                        ImagePath = post.ImagePath,
+                        MediaType = Path.GetExtension(map.Reverse[post.ImagePath]).ToLower() switch
+                        {
+                            ".jpg" or ".jpeg" or ".png" or ".gif" or ".webp" or ".avif" => "image",
+                            ".mp4" or ".mov" or ".avi" or ".mkv" => "video",
+                            _ => "unknown"
+                        },
+                        Caption = post.Caption,
+                        TimeAgo = post.TimeAgo,
+                        Likes = _rng.Next(12, 2400),
+                        Color = HslFromName(username),
+                        Initials = GetInitials(username)
+                    };
+                    _feedItems.Add(item);
+                }
+            }
+
+            if (_users.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    $"No users found in: {_rootDir}\n" +
+                    "Expected: each top-level subdirectory = one user, containing image files."
+                );
+            }
+
+            // Shuffle feed
+            _feedItems = _feedItems.OrderBy(_ => _rng.Next()).ToList();
+            FeedItems.AddRange(_feedItems);
+            lastRequest = DateTime.Now;
+        }
+
         public List<FeedItem> GetFeedItems() => _feedItems;
         public int GetPostCount() => _feedItems.Count;
         public int GetUserCount() => _users.Count;
@@ -113,7 +202,7 @@ namespace TheFeed
 
         public FeedItem GetRandomPost() {
             lastRequest = DateTime.Now;
-            var item = FeedItems[_rng.Next(_feedItems.Count)];
+            var item = FeedItems[_rng.Next(FeedItems.Count)];
             FeedItems.Remove(item); // Ensure we don't repeat until all shown
             if(FeedItems.Count == 0) {
                 // Reset feed when all items have been shown
